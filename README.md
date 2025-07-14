@@ -414,15 +414,18 @@ pip install -r requirements_db.txt  # MongoDB + Redis 支持
 
 ### 配置API密钥
 
-#### 🇨🇳 推荐：使用阿里百炼（国产大模型）
+#### 🚀 推荐：使用硅基流动（多模型统一接口）
 
 ```bash
 # 复制配置模板
 cp .env.example .env
 
 # 编辑 .env 文件，配置以下必需的API密钥：
-DASHSCOPE_API_KEY=your_dashscope_api_key_here
+SILICONFLOW_API_KEY=your_siliconflow_api_key_here
 FINNHUB_API_KEY=your_finnhub_api_key_here
+
+# 备选：阿里百炼API（国产大模型）
+DASHSCOPE_API_KEY=your_dashscope_api_key_here
 
 # 可选：Google AI API（支持Gemini模型）
 GOOGLE_API_KEY=your_google_api_key_here
@@ -769,11 +772,16 @@ streamlit run web/app.py
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 
-# 配置阿里百炼
+# 配置硅基流动（高性能优先，推荐）
 config = DEFAULT_CONFIG.copy()
-config["llm_provider"] = "dashscope"
-config["deep_think_llm"] = "qwen-plus"      # 深度分析
-config["quick_think_llm"] = "qwen-turbo"    # 快速任务
+config["llm_provider"] = "siliconflow"
+config["deep_think_llm"] = "Qwen/Qwen2.5-72B-Instruct"           # 最高性能：72B参数
+config["quick_think_llm"] = "deepseek-ai/DeepSeek-R1"            # 推理专用：最强逻辑
+# 专业化分析师配置
+config["market_analyst_llm"] = "meta-llama/Llama-3.1-70B-Instruct"      # 技术分析
+config["fundamentals_analyst_llm"] = "Qwen/Qwen2.5-72B-Instruct"        # 基本面分析
+config["news_analyst_llm"] = "deepseek-ai/DeepSeek-R1"                  # 新闻分析
+config["social_analyst_llm"] = "Qwen/Qwen2.5-32B-Instruct"              # 社交媒体
 
 # 创建交易智能体
 ta = TradingAgentsGraph(debug=True, config=config)

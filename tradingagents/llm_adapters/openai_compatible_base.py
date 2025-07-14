@@ -224,6 +224,23 @@ OPENAI_COMPATIBLE_PROVIDERS = {
             "qwen-max": {"context_length": 32768, "supports_function_calling": True},
             "qwen-max-latest": {"context_length": 32768, "supports_function_calling": True}
         }
+    },
+    "siliconflow": {
+        "adapter_class": "ChatSiliconFlow",  # 将在导入时解析
+        "base_url": "https://api.siliconflow.cn/v1",
+        "api_key_env": "SILICONFLOW_API_KEY",
+        "models": {
+            "deepseek-ai/DeepSeek-V3": {"context_length": 64000, "supports_function_calling": True},
+            "deepseek-ai/DeepSeek-R1": {"context_length": 64000, "supports_function_calling": True},
+            "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": {"context_length": 32000, "supports_function_calling": True},
+            "Qwen/QwQ-32B-Preview": {"context_length": 32000, "supports_function_calling": True},
+            "Qwen/Qwen2.5-72B-Instruct": {"context_length": 32000, "supports_function_calling": True},
+            "Qwen/Qwen2.5-32B-Instruct": {"context_length": 32000, "supports_function_calling": True},
+            "Qwen/Qwen2.5-14B-Instruct": {"context_length": 32000, "supports_function_calling": True},
+            "THUDM/GLM-4-9B-Chat": {"context_length": 32000, "supports_function_calling": True},
+            "meta-llama/Llama-3.1-70B-Instruct": {"context_length": 128000, "supports_function_calling": True},
+            "meta-llama/Llama-3.1-8B-Instruct": {"context_length": 128000, "supports_function_calling": True}
+        }
     }
 }
 
@@ -235,28 +252,33 @@ def create_openai_compatible_llm(
     temperature: float = 0.1,
     max_tokens: Optional[int] = None,
     **kwargs
-) -> OpenAICompatibleBase:
+) -> ChatOpenAI:
     """
     创建OpenAI兼容LLM实例的统一工厂函数
-    
+
     Args:
-        provider: 提供商名称 ("deepseek", "dashscope")
+        provider: 提供商名称 ("deepseek", "dashscope", "siliconflow")
         model: 模型名称
         api_key: API密钥
         temperature: 温度参数
         max_tokens: 最大token数
         **kwargs: 其他参数
-    
+
     Returns:
         OpenAI兼容的LLM实例
     """
-    
+
     if provider not in OPENAI_COMPATIBLE_PROVIDERS:
         raise ValueError(f"不支持的提供商: {provider}。支持的提供商: {list(OPENAI_COMPATIBLE_PROVIDERS.keys())}")
-    
+
     provider_config = OPENAI_COMPATIBLE_PROVIDERS[provider]
     adapter_class = provider_config["adapter_class"]
-    
+
+    # 动态导入硅基流动适配器
+    if provider == "siliconflow":
+        from .siliconflow_adapter import ChatSiliconFlow
+        adapter_class = ChatSiliconFlow
+
     return adapter_class(
         model=model,
         api_key=api_key,

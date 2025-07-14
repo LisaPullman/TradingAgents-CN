@@ -25,7 +25,8 @@ import json
 import os
 import pandas as pd
 from tqdm import tqdm
-from openai import OpenAI
+# 移除OpenAI依赖 - 已替换为硅基流动和其他开源方案
+# from openai import OpenAI
 
 # 尝试导入yfinance，如果失败则设置为None
 try:
@@ -735,73 +736,23 @@ def get_YFin_data(
 
 
 def get_stock_news_openai(ticker, curr_date):
-    config = get_config()
-    client = OpenAI(base_url=config["backend_url"])
-
-    response = client.responses.create(
-        model=config["quick_think_llm"],
-        input=[
-            {
-                "role": "system",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": f"Can you search Social Media for {ticker} from 7 days before {curr_date} to {curr_date}? Make sure you only get the data posted during that period.",
-                    }
-                ],
-            }
-        ],
-        text={"format": {"type": "text"}},
-        reasoning={},
-        tools=[
-            {
-                "type": "web_search_preview",
-                "user_location": {"type": "approximate"},
-                "search_context_size": "low",
-            }
-        ],
-        temperature=1,
-        max_output_tokens=4096,
-        top_p=1,
-        store=True,
-    )
-
-    return response.output[1].content[0].text
+    """
+    已弃用：OpenAI新闻搜索功能
+    请使用 get_google_news 或 get_finnhub_news 替代
+    """
+    print(f"⚠️ get_stock_news_openai 已弃用，请使用其他新闻源")
+    # 回退到Google新闻
+    return get_google_news(f"{ticker} stock news", curr_date, 7)
 
 
 def get_global_news_openai(curr_date):
-    config = get_config()
-    client = OpenAI(base_url=config["backend_url"])
-
-    response = client.responses.create(
-        model=config["quick_think_llm"],
-        input=[
-            {
-                "role": "system",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": f"Can you search global or macroeconomics news from 7 days before {curr_date} to {curr_date} that would be informative for trading purposes? Make sure you only get the data posted during that period.",
-                    }
-                ],
-            }
-        ],
-        text={"format": {"type": "text"}},
-        reasoning={},
-        tools=[
-            {
-                "type": "web_search_preview",
-                "user_location": {"type": "approximate"},
-                "search_context_size": "low",
-            }
-        ],
-        temperature=1,
-        max_output_tokens=4096,
-        top_p=1,
-        store=True,
-    )
-
-    return response.output[1].content[0].text
+    """
+    已弃用：OpenAI全球新闻搜索功能
+    请使用 get_google_news 替代
+    """
+    print(f"⚠️ get_global_news_openai 已弃用，请使用其他新闻源")
+    # 回退到Google新闻
+    return get_google_news("global economy news", curr_date, 7)
 
 
 def get_fundamentals_finnhub(ticker, curr_date):
@@ -946,78 +897,11 @@ def get_fundamentals_finnhub(ticker, curr_date):
 
 def get_fundamentals_openai(ticker, curr_date):
     """
-    获取股票基本面数据，优先使用OpenAI，失败时回退到Finnhub API
-    支持缓存机制以提高性能
-    Args:
-        ticker (str): 股票代码
-        curr_date (str): 当前日期，格式为yyyy-mm-dd
-    Returns:
-        str: 基本面数据报告
+    已弃用：OpenAI基本面数据搜索功能
+    直接使用 get_fundamentals_finnhub 替代
     """
-    try:
-        from .cache_manager import get_cache
-        
-        # 检查缓存 - 优先检查OpenAI缓存
-        cache = get_cache()
-        cached_key = cache.find_cached_fundamentals_data(ticker, data_source="openai")
-        if cached_key:
-            cached_data = cache.load_fundamentals_data(cached_key)
-            if cached_data:
-                print(f"💾 [DEBUG] 从缓存加载OpenAI基本面数据: {ticker}")
-                return cached_data
-        
-        config = get_config()
-        
-        # 检查是否配置了OpenAI相关设置
-        if not config.get("backend_url") or not config.get("quick_think_llm"):
-            print(f"📊 [DEBUG] OpenAI配置不完整，直接使用Finnhub API")
-            return get_fundamentals_finnhub(ticker, curr_date)
-        
-        print(f"📊 [DEBUG] 尝试使用OpenAI获取 {ticker} 的基本面数据...")
-        
-        client = OpenAI(base_url=config["backend_url"])
-
-        response = client.responses.create(
-            model=config["quick_think_llm"],
-            input=[
-                {
-                    "role": "system",
-                    "content": [
-                        {
-                            "type": "input_text",
-                            "text": f"Can you search Fundamental for discussions on {ticker} during of the month before {curr_date} to the month of {curr_date}. Make sure you only get the data posted during that period. List as a table, with PE/PS/Cash flow/ etc",
-                        }
-                    ],
-                }
-            ],
-            text={"format": {"type": "text"}},
-            reasoning={},
-            tools=[
-                {
-                    "type": "web_search_preview",
-                    "user_location": {"type": "approximate"},
-                    "search_context_size": "low",
-                }
-            ],
-            temperature=1,
-            max_output_tokens=4096,
-            top_p=1,
-            store=True,
-        )
-
-        result = response.output[1].content[0].text
-        
-        # 保存到缓存
-        if result and len(result) > 100:  # 只有当结果有实际内容时才缓存
-            cache.save_fundamentals_data(ticker, result, data_source="openai")
-        
-        print(f"📊 [DEBUG] OpenAI基本面数据获取成功，长度: {len(result)}")
-        return result
-        
-    except Exception as e:
-        print(f"❌ [DEBUG] OpenAI基本面数据获取失败: {str(e)}")
-        print(f"📊 [DEBUG] 回退到Finnhub API...")
-        return get_fundamentals_finnhub(ticker, curr_date)
+    print(f"⚠️ get_fundamentals_openai 已弃用，使用Finnhub API")
+    return get_fundamentals_finnhub(ticker, curr_date)
 
 
 # ==================== Tushare数据接口 ====================

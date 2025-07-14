@@ -44,6 +44,75 @@ class GraphSetup:
         self.config = config or {}
         self.react_llm = react_llm
 
+    def _create_specialized_llm(self, config_key: str):
+        """为特定分析师创建专用的LLM实例，失败时回退到DEFAULT_MODEL"""
+        import os
+
+        model_name = self.config.get(config_key)
+        if not model_name:
+            # 如果没有配置专用模型，使用DEFAULT_MODEL
+            default_model = os.getenv('DEFAULT_MODEL', 'deepseek-ai/DeepSeek-V3')
+            print(f"⚠️ {config_key}未配置，使用默认模型: {default_model}")
+            return self._create_fallback_llm(default_model)
+
+        llm_provider = self.config.get("llm_provider", "").lower()
+
+        if "siliconflow" in llm_provider or "硅基流动" in self.config.get("llm_provider", ""):
+            # 创建硅基流动专用LLM
+            from tradingagents.llm_adapters.siliconflow_adapter import ChatSiliconFlow
+
+            siliconflow_api_key = os.getenv('SILICONFLOW_API_KEY')
+            if not siliconflow_api_key:
+                default_model = os.getenv('DEFAULT_MODEL', 'deepseek-ai/DeepSeek-V3')
+                print(f"⚠️ 硅基流动API密钥未找到，{config_key}回退到默认模型: {default_model}")
+                return self._create_fallback_llm(default_model)
+
+            try:
+                specialized_llm = ChatSiliconFlow(
+                    model=model_name,
+                    api_key=siliconflow_api_key,
+                    temperature=0.1,
+                    max_tokens=2000
+                )
+                print(f"✅ {config_key}成功创建专用模型: {model_name}")
+                return specialized_llm
+            except Exception as e:
+                default_model = os.getenv('DEFAULT_MODEL', 'deepseek-ai/DeepSeek-V3')
+                print(f"❌ {config_key}专用模型创建失败: {e}")
+                print(f"🔄 回退到默认模型: {default_model}")
+                return self._create_fallback_llm(default_model)
+        else:
+            # 其他提供商暂时回退到默认模型
+            default_model = os.getenv('DEFAULT_MODEL', 'deepseek-ai/DeepSeek-V3')
+            print(f"⚠️ 当前LLM提供商不支持专用模型配置，{config_key}回退到默认模型: {default_model}")
+            return self._create_fallback_llm(default_model)
+
+    def _create_fallback_llm(self, model_name: str):
+        """创建回退LLM实例"""
+        import os
+
+        llm_provider = self.config.get("llm_provider", "").lower()
+
+        if "siliconflow" in llm_provider or "硅基流动" in self.config.get("llm_provider", ""):
+            # 使用硅基流动创建默认模型
+            from tradingagents.llm_adapters.siliconflow_adapter import ChatSiliconFlow
+
+            siliconflow_api_key = os.getenv('SILICONFLOW_API_KEY')
+            if siliconflow_api_key:
+                try:
+                    return ChatSiliconFlow(
+                        model=model_name,
+                        api_key=siliconflow_api_key,
+                        temperature=0.1,
+                        max_tokens=2000
+                    )
+                except Exception as e:
+                    print(f"❌ 默认模型{model_name}创建失败: {e}")
+
+        # 最终回退到系统的快速思考模型
+        print(f"🔄 最终回退到系统快速思考模型")
+        return self.quick_thinking_llm
+
     def setup_graph(
         self, selected_analysts=["market", "social", "news", "fundamentals"]
     ):
@@ -65,69 +134,45 @@ class GraphSetup:
         tool_nodes = {}
 
         if "market" in selected_analysts:
-            # 现在所有LLM都使用标准市场分析师（包括阿里百炼的OpenAI兼容适配器）
-            llm_provider = self.config.get("llm_provider", "").lower()
+            # 为市场分析师创建专用的高性能LLM
+            market_llm = self._create_specialized_llm("market_analyst_llm")
+            print(f"📈 [DEBUG] 市场分析师使用专用模型: {self.config.get('market_analyst_llm', 'default')}")
 
-            # 检查是否使用OpenAI兼容的阿里百炼适配器
-            using_dashscope_openai = (
-                "dashscope" in llm_provider and
-                hasattr(self.quick_thinking_llm, '__class__') and
-                'OpenAI' in self.quick_thinking_llm.__class__.__name__
-            )
-
-            if using_dashscope_openai:
-                print("📈 [DEBUG] 使用标准市场分析师（阿里百炼OpenAI兼容模式）")
-            elif "dashscope" in llm_provider or "阿里百炼" in self.config.get("llm_provider", ""):
-                print("📈 [DEBUG] 使用标准市场分析师（阿里百炼原生模式）")
-            elif "deepseek" in llm_provider:
-                print("📈 [DEBUG] 使用标准市场分析师（DeepSeek）")
-            else:
-                print("📈 [DEBUG] 使用标准市场分析师")
-
-            # 所有LLM都使用标准分析师
             analyst_nodes["market"] = create_market_analyst(
-                self.quick_thinking_llm, self.toolkit
+                market_llm, self.toolkit
             )
             delete_nodes["market"] = create_msg_delete()
             tool_nodes["market"] = self.tool_nodes["market"]
 
         if "social" in selected_analysts:
+            # 为社交媒体分析师创建专用的中文优化LLM
+            social_llm = self._create_specialized_llm("social_analyst_llm")
+            print(f"💭 [DEBUG] 社交媒体分析师使用专用模型: {self.config.get('social_analyst_llm', 'default')}")
+
             analyst_nodes["social"] = create_social_media_analyst(
-                self.quick_thinking_llm, self.toolkit
+                social_llm, self.toolkit
             )
             delete_nodes["social"] = create_msg_delete()
             tool_nodes["social"] = self.tool_nodes["social"]
 
         if "news" in selected_analysts:
+            # 为新闻分析师创建专用的推理优化LLM
+            news_llm = self._create_specialized_llm("news_analyst_llm")
+            print(f"📰 [DEBUG] 新闻分析师使用专用模型: {self.config.get('news_analyst_llm', 'default')}")
+
             analyst_nodes["news"] = create_news_analyst(
-                self.quick_thinking_llm, self.toolkit
+                news_llm, self.toolkit
             )
             delete_nodes["news"] = create_msg_delete()
             tool_nodes["news"] = self.tool_nodes["news"]
 
         if "fundamentals" in selected_analysts:
-            # 现在所有LLM都使用标准基本面分析师（包括阿里百炼的OpenAI兼容适配器）
-            llm_provider = self.config.get("llm_provider", "").lower()
+            # 为基本面分析师创建专用的最高性能LLM
+            fundamentals_llm = self._create_specialized_llm("fundamentals_analyst_llm")
+            print(f"💰 [DEBUG] 基本面分析师使用专用模型: {self.config.get('fundamentals_analyst_llm', 'default')}")
 
-            # 检查是否使用OpenAI兼容的阿里百炼适配器
-            using_dashscope_openai = (
-                "dashscope" in llm_provider and
-                hasattr(self.quick_thinking_llm, '__class__') and
-                'OpenAI' in self.quick_thinking_llm.__class__.__name__
-            )
-
-            if using_dashscope_openai:
-                print("📊 [DEBUG] 使用标准基本面分析师（阿里百炼OpenAI兼容模式）")
-            elif "dashscope" in llm_provider or "阿里百炼" in self.config.get("llm_provider", ""):
-                print("📊 [DEBUG] 使用标准基本面分析师（阿里百炼原生模式）")
-            elif "deepseek" in llm_provider:
-                print("📊 [DEBUG] 使用标准基本面分析师（DeepSeek）")
-            else:
-                print("📊 [DEBUG] 使用标准基本面分析师")
-
-            # 所有LLM都使用标准分析师（包含强制工具调用机制）
             analyst_nodes["fundamentals"] = create_fundamentals_analyst(
-                self.quick_thinking_llm, self.toolkit
+                fundamentals_llm, self.toolkit
             )
             delete_nodes["fundamentals"] = create_msg_delete()
             tool_nodes["fundamentals"] = self.tool_nodes["fundamentals"]

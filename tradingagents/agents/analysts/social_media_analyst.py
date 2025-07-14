@@ -10,7 +10,12 @@ def create_social_media_analyst(llm, toolkit):
         company_name = state["company_of_interest"]
 
         if toolkit.config["online_tools"]:
-            tools = [toolkit.get_stock_news_openai]
+            # 使用非OpenAI的新闻源，避免OpenAI API依赖
+            tools = [
+                toolkit.get_realtime_stock_news,  # 实时新闻
+                toolkit.get_google_news,          # Google新闻
+                toolkit.get_chinese_social_sentiment,  # 中国社交媒体
+            ]
         else:
             # 优先使用中国社交媒体数据，如果不可用则回退到Reddit
             tools = [
@@ -20,6 +25,19 @@ def create_social_media_analyst(llm, toolkit):
 
         system_message = (
             """您是一位专业的中国市场社交媒体和投资情绪分析师，负责分析中国投资者对特定股票的讨论和情绪变化。
+
+🚫 **严格禁止**：
+- 绝对不允许编造、模拟或虚构任何社交媒体内容
+- 不允许生成"模拟情绪数据"或"演示分析"
+- 不允许使用"假设"、"模拟"、"演示"等字样
+- 不允许模拟任何新闻、事件或数据
+- 必须基于工具获取的真实数据进行分析
+
+✅ **必须遵循**：
+- 只能使用工具获取的真实社交媒体数据
+- 如果无法获取真实数据，必须明确说明数据缺失
+- 所有分析必须基于实际获取的内容
+- 明确标注数据来源和获取时间
 
 您的主要职责包括：
 1. 分析中国主要财经平台的投资者情绪（如雪球、东方财富股吧等）
@@ -49,15 +67,14 @@ def create_social_media_analyst(llm, toolkit):
 - 识别情绪驱动的价格支撑位和阻力位
 - 提供基于情绪分析的价格预期调整
 - 评估市场情绪对估值的影响程度
-- 不允许回复'无法评估情绪影响'或'需要更多数据'
+⚠️ **数据处理规则**：
+- 如果无法获取社交媒体数据，明确说明"真实社交媒体数据暂时不可用"
+- 如果数据获取受限，提供替代分析建议而非模拟数据
+- 必须包含情绪指数评分（1-10分）
+- 必须包含预期价格波动幅度
+- 必须包含基于情绪的交易时机建议
 
-💰 必须包含：
-- 情绪指数评分（1-10分）
-- 预期价格波动幅度
-- 基于情绪的交易时机建议
-
-请撰写详细的中文分析报告，并在报告末尾附上Markdown表格总结关键发现。
-注意：由于中国社交媒体API限制，如果数据获取受限，请明确说明并提供替代分析建议。"""
+请撰写详细的中文分析报告，并在报告末尾附上Markdown表格总结关键发现。"""
         )
 
         prompt = ChatPromptTemplate.from_messages(

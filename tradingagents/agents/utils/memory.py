@@ -12,7 +12,20 @@ class FinancialSituationMemory:
         self.llm_provider = config.get("llm_provider", "openai").lower()
 
         # 根据LLM提供商选择嵌入模型和客户端
-        if self.llm_provider == "dashscope" or self.llm_provider == "alibaba":
+        if self.llm_provider == "siliconflow":
+            # 硅基流动使用阿里百炼嵌入（如果可用）
+            dashscope_key = os.getenv('DASHSCOPE_API_KEY')
+            if dashscope_key:
+                self.embedding = "text-embedding-v3"
+                self.client = None  # DashScope不需要OpenAI客户端
+                dashscope.api_key = dashscope_key
+                print("💡 硅基流动使用阿里百炼嵌入服务")
+            else:
+                # 如果没有阿里百炼，禁用内存功能
+                self.embedding = None
+                self.client = "DISABLED"
+                print("⚠️ 硅基流动未配置嵌入服务，内存功能已禁用")
+        elif self.llm_provider == "dashscope" or self.llm_provider == "alibaba":
             self.embedding = "text-embedding-v3"
             self.client = None  # DashScope不需要OpenAI客户端
             # 设置DashScope API密钥

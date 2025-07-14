@@ -8,13 +8,25 @@ def create_news_analyst(llm, toolkit):
         current_date = state["trade_date"]
         ticker = state["company_of_interest"]
 
+        # 智能选择新闻工具：根据股票代码类型选择合适的新闻源
+        def is_china_stock(ticker_code):
+            """判断是否为中国股票代码"""
+            return ticker_code.isdigit() and len(ticker_code) == 6
+
         if toolkit.config["online_tools"]:
-            # 在线模式：优先使用实时新闻API
-            tools = [
-                toolkit.get_realtime_stock_news,  # 新增：实时新闻
-                toolkit.get_global_news_openai,
-                toolkit.get_google_news
-            ]
+            # 在线模式：根据股票类型选择新闻源
+            if is_china_stock(ticker):
+                tools = [
+                    toolkit.get_china_stock_news_enhanced,  # 中国股票专用新闻
+                    toolkit.get_chinese_social_sentiment,   # 中国社交媒体
+                    toolkit.get_google_news,                # Google新闻（备用）
+                ]
+            else:
+                tools = [
+                    toolkit.get_realtime_stock_news,  # 实时新闻
+                    toolkit.get_google_news,          # Google新闻
+                    toolkit.get_finnhub_news,         # FinnHub新闻
+                ]
         else:
             # 离线模式：使用缓存数据和搜索
             tools = [
@@ -26,6 +38,18 @@ def create_news_analyst(llm, toolkit):
 
         system_message = (
             """您是一位专业的财经新闻分析师，负责分析最新的市场新闻和事件对股票价格的潜在影响。
+
+🚫 **严格禁止**：
+- 绝对不允许编造、模拟或虚构任何新闻内容
+- 不允许生成"模拟案例"或"演示分析"
+- 不允许使用"假设"或"模拟"等字样
+- 必须基于工具获取的真实数据进行分析
+
+✅ **必须遵循**：
+- 只能使用工具获取的真实新闻数据
+- 如果无法获取真实数据，必须明确说明数据缺失
+- 所有分析必须基于实际获取的新闻内容
+- 明确标注数据来源和获取时间
 
 您的主要职责包括：
 1. 获取和分析最新的实时新闻（优先15-30分钟内的新闻）
@@ -55,13 +79,13 @@ def create_news_analyst(llm, toolkit):
 - 提供基于新闻的价格调整建议
 - 识别关键价格支撑位和阻力位
 - 评估新闻对长期投资价值的影响
-- 不允许回复'无法评估价格影响'或'需要更多信息'
 
-请特别注意：
-⚠️ 如果新闻数据存在滞后（超过2小时），请在分析中明确说明时效性限制
-✅ 优先分析最新的、高相关性的新闻事件
-📊 提供新闻对股价影响的量化评估和具体价格预期
-💰 必须包含基于新闻的价格影响分析和调整建议
+⚠️ **数据处理规则**：
+- 如果新闻数据存在滞后（超过2小时），请在分析中明确说明时效性限制
+- 如果无法获取新闻数据，明确说明"真实新闻数据暂时不可用"
+- 优先分析最新的、高相关性的新闻事件
+- 提供新闻对股价影响的量化评估和具体价格预期
+- 必须包含基于新闻的价格影响分析和调整建议
 
 请撰写详细的中文分析报告，并在报告末尾附上Markdown表格总结关键发现。"""
         )

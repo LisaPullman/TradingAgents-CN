@@ -88,6 +88,7 @@ class ConfigManager:
     def _get_env_api_key(self, provider: str) -> str:
         """从环境变量获取API密钥"""
         env_key_map = {
+            "siliconflow": "SILICONFLOW_API_KEY",
             "dashscope": "DASHSCOPE_API_KEY",
             "openai": "OPENAI_API_KEY",
             "google": "GOOGLE_API_KEY",
@@ -131,19 +132,19 @@ class ConfigManager:
 
     def _init_default_configs(self):
         """初始化默认配置"""
-        # 默认模型配置
+        # 默认模型配置 - 优先硅基流动
         if not self.models_file.exists():
             default_models = [
                 ModelConfig(
-                    provider="dashscope",
-                    model_name="qwen-turbo",
+                    provider="siliconflow",
+                    model_name="deepseek-ai/DeepSeek-V3",
                     api_key="",
                     max_tokens=4000,
                     temperature=0.7
                 ),
                 ModelConfig(
-                    provider="dashscope",
-                    model_name="qwen-plus-latest",
+                    provider="siliconflow",
+                    model_name="Qwen/Qwen2.5-72B-Instruct",
                     api_key="",
                     max_tokens=8000,
                     temperature=0.7
@@ -213,8 +214,8 @@ class ConfigManager:
             default_data_dir = os.path.join(os.path.expanduser("~"), "Documents", "TradingAgents", "data")
             
             default_settings = {
-                "default_provider": "dashscope",
-                "default_model": "qwen-turbo",
+                "default_provider": "siliconflow",
+                "default_model": "deepseek-ai/DeepSeek-V3",
                 "enable_cost_tracking": True,
                 "cost_alert_threshold": 100.0,  # 成本警告阈值
                 "currency_preference": "CNY",

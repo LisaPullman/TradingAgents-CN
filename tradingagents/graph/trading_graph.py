@@ -120,6 +120,29 @@ class TradingAgentsGraph:
                 base_url=deepseek_base_url,
                 temperature=0.1,
                 max_tokens=2000
+            )
+        elif (self.config["llm_provider"].lower() == "siliconflow" or
+              "siliconflow" in self.config["llm_provider"].lower() or
+              "硅基流动" in self.config["llm_provider"]):
+            # 硅基流动配置 - 支持多种模型的统一接口
+            from tradingagents.llm_adapters.siliconflow_adapter import ChatSiliconFlow
+
+            siliconflow_api_key = os.getenv('SILICONFLOW_API_KEY')
+            if not siliconflow_api_key:
+                raise ValueError("使用硅基流动需要设置SILICONFLOW_API_KEY环境变量")
+
+            print("🔧 使用硅基流动 API (支持多种模型)")
+            self.deep_thinking_llm = ChatSiliconFlow(
+                model=self.config["deep_think_llm"],
+                api_key=siliconflow_api_key,
+                temperature=0.1,
+                max_tokens=2000
+            )
+            self.quick_thinking_llm = ChatSiliconFlow(
+                model=self.config["quick_think_llm"],
+                api_key=siliconflow_api_key,
+                temperature=0.1,
+                max_tokens=2000
                 )
 
             print(f"✅ [DeepSeek] 已启用token统计功能")
@@ -193,18 +216,17 @@ class TradingAgentsGraph:
             ),
             "social": ToolNode(
                 [
-                    # online tools
-                    self.toolkit.get_stock_news_openai,
-                    # offline tools
+                    # 使用非OpenAI的社交媒体工具
+                    self.toolkit.get_chinese_social_sentiment,
                     self.toolkit.get_reddit_stock_info,
+                    self.toolkit.get_realtime_stock_news,
                 ]
             ),
             "news": ToolNode(
                 [
-                    # online tools
-                    self.toolkit.get_global_news_openai,
+                    # 使用非OpenAI的新闻工具
+                    self.toolkit.get_realtime_stock_news,
                     self.toolkit.get_google_news,
-                    # offline tools
                     self.toolkit.get_finnhub_news,
                     self.toolkit.get_reddit_news,
                 ]

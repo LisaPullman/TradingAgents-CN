@@ -889,7 +889,9 @@ def run_analysis():
     config["backend_url"] = selections["backend_url"]
     # 处理LLM提供商名称，确保正确识别
     llm_provider = selections["llm_provider"].lower()
-    if "阿里百炼" in selections["llm_provider"] or "dashscope" in llm_provider:
+    if "硅基流动" in selections["llm_provider"] or "siliconflow" in llm_provider:
+        config["llm_provider"] = "siliconflow"
+    elif "阿里百炼" in selections["llm_provider"] or "dashscope" in llm_provider:
         config["llm_provider"] = "dashscope"
     elif "deepseek" in llm_provider or "DeepSeek" in selections["llm_provider"]:
         config["llm_provider"] = "deepseek"

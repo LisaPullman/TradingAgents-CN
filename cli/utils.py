@@ -127,6 +127,14 @@ def select_shallow_thinking_agent(provider) -> str:
 
     # Define shallow thinking llm engine options with their corresponding model names
     SHALLOW_AGENT_OPTIONS = {
+        "硅基流动 (siliconflow)": [
+            ("Qwen 2.5 72B - 🥇最高性能，72B参数", "Qwen/Qwen2.5-72B-Instruct"),
+            ("Llama 3.1 70B - 🥈超强性能，128K上下文", "meta-llama/Llama-3.1-70B-Instruct"),
+            ("DeepSeek R1 - 🥉推理专用，逻辑分析最强", "deepseek-ai/DeepSeek-R1"),
+            ("DeepSeek V3 - 🏅最新版本，综合能力强", "deepseek-ai/DeepSeek-V3"),
+            ("Qwen 2.5 32B - 🎯中文优化，平衡性能", "Qwen/Qwen2.5-32B-Instruct"),
+            ("Qwen 2.5 14B - ⚡轻量级，快速响应", "Qwen/Qwen2.5-14B-Instruct"),
+        ],
         "openai": [
             ("GPT-4o-mini - Fast and efficient for quick tasks", "gpt-4o-mini"),
             ("GPT-4.1-nano - Ultra-lightweight model for basic operations", "gpt-4.1-nano"),
@@ -204,6 +212,14 @@ def select_deep_thinking_agent(provider) -> str:
 
     # Define deep thinking llm engine options with their corresponding model names
     DEEP_AGENT_OPTIONS = {
+        "硅基流动 (siliconflow)": [
+            ("Qwen 2.5 72B - 🥇最强性能，72B参数，顶级决策", "Qwen/Qwen2.5-72B-Instruct"),
+            ("Llama 3.1 70B - 🥈超强性能，128K上下文，长文本", "meta-llama/Llama-3.1-70B-Instruct"),
+            ("DeepSeek R1 - 🥉推理专用，复杂逻辑分析", "deepseek-ai/DeepSeek-R1"),
+            ("DeepSeek V3 - 🏅最新版本，综合能力强", "deepseek-ai/DeepSeek-V3"),
+            ("Qwen QwQ 32B - 🎯问答专用，知识查询", "Qwen/QwQ-32B-Preview"),
+            ("Qwen 2.5 32B - ⚡平衡性能，中文优化", "Qwen/Qwen2.5-32B-Instruct"),
+        ],
         "openai": [
             ("GPT-4.1-nano - Ultra-lightweight model for basic operations", "gpt-4.1-nano"),
             ("GPT-4.1-mini - Compact model with good performance", "gpt-4.1-mini"),
@@ -281,8 +297,9 @@ def select_deep_thinking_agent(provider) -> str:
 def select_llm_provider() -> tuple[str, str]:
     """Select the LLM provider using interactive selection."""
     # Define LLM provider options with their corresponding endpoints
-    # 国产LLM作为默认推荐选项放在前面
+    # 硅基流动作为默认推荐选项放在前面
     BASE_URLS = [
+        ("硅基流动 (SiliconFlow)", "https://api.siliconflow.cn/v1"),
         ("阿里百炼 (DashScope)", "https://dashscope.aliyuncs.com/api/v1"),
         ("DeepSeek V3", "https://api.deepseek.com"),
         ("OpenAI", "https://api.openai.com/v1"),
@@ -298,8 +315,8 @@ def select_llm_provider() -> tuple[str, str]:
             questionary.Choice(display, value=(display, value))
             for display, value in BASE_URLS
         ],
-        default=(BASE_URLS[0][0], BASE_URLS[0][1]),  # 默认选择阿里百炼的完整值
-        instruction="\n- 使用方向键导航 | Use arrow keys to navigate\n- 按回车键选择 | Press Enter to select\n- 🇨🇳 推荐使用阿里百炼 (默认选择)",
+        default=(BASE_URLS[0][0], BASE_URLS[0][1]),  # 默认选择硅基流动的完整值
+        instruction="\n- 使用方向键导航 | Use arrow keys to navigate\n- 按回车键选择 | Press Enter to select\n- 🚀 推荐使用硅基流动 (默认选择)",
         style=questionary.Style(
             [
                 ("selected", "fg:green noinherit"),

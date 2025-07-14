@@ -1,0 +1,128 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>TradingAgents-CN 系统优化报告</title>
+        <meta charset="utf-8">
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+            .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+            .score { font-size: 48px; font-weight: bold; margin: 20px 0; }
+            .score.excellent { color: #28a745; }
+            .score.good { color: #17a2b8; }
+            .score.warning { color: #ffc107; }
+            .score.critical { color: #dc3545; }
+            .section { margin: 30px 0; padding: 20px; border-radius: 8px; }
+            .section h2 { margin-top: 0; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+            .status-good { background-color: #d4edda; border-left: 4px solid #28a745; }
+            .status-warning { background-color: #fff3cd; border-left: 4px solid #ffc107; }
+            .status-critical { background-color: #f8d7da; border-left: 4px solid #dc3545; }
+            .metric { display: inline-block; margin: 10px; padding: 15px; background: #f8f9fa; border-radius: 5px; min-width: 150px; text-align: center; }
+            .recommendations { background-color: #e7f3ff; border-left: 4px solid #007bff; }
+            .recommendations ul { margin: 10px 0; }
+            .recommendations li { margin: 5px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background-color: #f8f9fa; font-weight: bold; }
+            .test-passed { color: #28a745; }
+            .test-failed { color: #dc3545; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🚀 TradingAgents-CN 系统优化报告</h1>
+                <p>生成时间: 2025-07-14 14:38:53</p>
+                <div class="score warning">72.0/100</div>
+            </div>
+    
+            <div class="section">
+                <h2>🧪 测试结果</h2>
+                <div class="metric">
+                    <strong>通过率</strong><br>
+                    5/5 (100.0%)
+                </div>
+                <table>
+                    <tr><th>测试文件</th><th>状态</th><th>说明</th></tr>
+    
+                    <tr>
+                        <td>test_error_handling.py</td>
+                        <td class="test-passed">✅ 通过</td>
+                        <td>WARNING:root:Circuit breaker switched to OPEN after 2 failures
+ERROR:root:failing_function_reraise u...</td>
+                    </tr>
+        
+                    <tr>
+                        <td>test_monitoring_logging.py</td>
+                        <td class="test-passed">✅ 通过</td>
+                        <td>正常</td>
+                    </tr>
+        
+                    <tr>
+                        <td>test_core_functionality.py</td>
+                        <td class="test-passed">✅ 通过</td>
+                        <td>ERROR:root:failing_function unexpected error: Test error
+INFO:integration_test:Test message
+INFO:hea...</td>
+                    </tr>
+        
+                    <tr>
+                        <td>test_security.py</td>
+                        <td class="test-passed">✅ 通过</td>
+                        <td>正常</td>
+                    </tr>
+        
+                    <tr>
+                        <td>test_performance.py</td>
+                        <td class="test-passed">✅ 通过</td>
+                        <td>正常</td>
+                    </tr>
+        
+                </table>
+            </div>
+    
+            <div class="section">
+                <h2>📊 代码覆盖率</h2>
+                <div class="metric">
+                    <strong>整体覆盖率</strong><br>
+                    38.0%
+                </div>
+                <div class="metric">
+                    <strong>已测试模块</strong><br>
+                    36/59
+                </div>
+            </div>
+    
+            <div class="section status-warning">
+                <h2>🔒 安全状态</h2>
+                <p><strong>状态:</strong> issues_found</p>
+                <p><strong>环境问题:</strong> 1 个</p>
+            </div>
+    
+            <div class="section status-good">
+                <h2>⚡ 性能状态</h2>
+                <div class="metric">
+                    <strong>CPU使用率</strong><br>
+                    22.1%
+                </div>
+                <div class="metric">
+                    <strong>内存使用率</strong><br>
+                    49.5%
+                </div>
+                <div class="metric">
+                    <strong>缓存命中率</strong><br>
+                    0.0%
+                </div>
+            </div>
+    
+            <div class="section recommendations">
+                <h2>💡 优化建议</h2>
+                <ul>
+    <li>提高测试覆盖率至70%以上</li><li>修复安全问题: 1个环境安全问题</li><li>启动系统监控服务</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+    </html>
+    

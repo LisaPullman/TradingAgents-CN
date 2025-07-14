@@ -135,12 +135,39 @@ class Toolkit:
             str: 包含中国投资者情绪分析、讨论热度、关键观点的格式化报告
         """
         try:
-            # 这里可以集成多个中国平台的数据
-            chinese_sentiment_results = interface.get_chinese_social_sentiment(ticker, curr_date)
-            return chinese_sentiment_results
+            # 检查是否为中国股票代码
+            if ticker.isdigit() and len(ticker) == 6:
+                # 使用增强版中国股票新闻获取
+                from tradingagents.dataflows.china_news_enhanced import get_china_stock_news_enhanced
+                return get_china_stock_news_enhanced(ticker, curr_date)
+            else:
+                # 非中国股票，使用原有逻辑
+                chinese_sentiment_results = interface.get_chinese_social_sentiment(ticker, curr_date)
+                return chinese_sentiment_results
         except Exception as e:
             # 如果中国平台数据获取失败，回退到原有的Reddit数据
             return interface.get_reddit_company_news(ticker, curr_date, 7, 5)
+
+    @staticmethod
+    @tool
+    def get_china_stock_news_enhanced(
+        ticker: Annotated[str, "中国股票代码，如 600990, 000001"],
+        curr_date: Annotated[str, "分析日期，格式为 yyyy-mm-dd"],
+    ) -> str:
+        """
+        增强版中国股票新闻获取工具，专门处理中国A股新闻分析。
+        解决未来日期、股票代码识别、新闻源覆盖等问题。
+        Args:
+            ticker (str): 中国股票代码，如 600990, 000001
+            curr_date (str): 分析日期，格式为 yyyy-mm-dd
+        Returns:
+            str: 包含新闻事件分析、市场情绪、投资建议的详细报告
+        """
+        try:
+            from tradingagents.dataflows.china_news_enhanced import get_china_stock_news_enhanced
+            return get_china_stock_news_enhanced(ticker, curr_date)
+        except Exception as e:
+            return f"中国股票新闻获取失败: {str(e)}，建议使用基本面分析和技术分析作为替代"
 
     @staticmethod
     @tool
@@ -496,41 +523,8 @@ class Toolkit:
             # 如果实时新闻获取失败，回退到Google新闻
             return interface.get_google_news(f"{ticker} stock news", curr_date, 1)
 
-    @staticmethod
-    @tool
-    def get_stock_news_openai(
-        ticker: Annotated[str, "the company's ticker"],
-        curr_date: Annotated[str, "Current date in yyyy-mm-dd format"],
-    ):
-        """
-        Retrieve the latest news about a given stock by using OpenAI's news API.
-        Args:
-            ticker (str): Ticker of a company. e.g. AAPL, TSM
-            curr_date (str): Current date in yyyy-mm-dd format
-        Returns:
-            str: A formatted string containing the latest news about the company on the given date.
-        """
-
-        openai_news_results = interface.get_stock_news_openai(ticker, curr_date)
-
-        return openai_news_results
-
-    @staticmethod
-    @tool
-    def get_global_news_openai(
-        curr_date: Annotated[str, "Current date in yyyy-mm-dd format"],
-    ):
-        """
-        Retrieve the latest macroeconomics news on a given date using OpenAI's macroeconomics news API.
-        Args:
-            curr_date (str): Current date in yyyy-mm-dd format
-        Returns:
-            str: A formatted string containing the latest macroeconomic news on the given date.
-        """
-
-        openai_news_results = interface.get_global_news_openai(curr_date)
-
-        return openai_news_results
+    # 注意：已移除 get_stock_news_openai 和 get_global_news_openai
+    # 这些OpenAI专用功能已被更可靠的开源替代方案取代
 
     @staticmethod
     @tool
