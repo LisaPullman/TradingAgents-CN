@@ -1,0 +1,210 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tradingagents-app
+  labels:
+    app: tradingagents
+    version: v1.0.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tradingagents
+  template:
+    metadata:
+      labels:
+        app: tradingagents
+        version: v1.0.0
+    spec:
+      containers:
+      - name: tradingagents
+        image: tradingagents-cn:latest
+        ports:
+        - containerPort: 8501
+          name: http
+        - containerPort: 8000
+          name: api
+        env:
+        - name: TRADINGAGENTS_ENV
+          value: "production"
+        - name: TRADINGAGENTS_LOG_LEVEL
+          value: "INFO"
+        - name: TRADINGAGENTS_LOG_DIR
+          value: "/app/logs"
+        - name: PYTHONPATH
+          value: "/app"
+        envFrom:
+        - secretRef:
+            name: tradingagents-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health/liveness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/readiness
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: data
+          mountPath: /app/data
+        - name: cache
+          mountPath: /app/cache
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: data
+        persistentVolumeClaim:
+          claimName: tradingagents-data
+      - name: cache
+        emptyDir: {}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tradingagents-service
+  labels:
+    app: tradingagents
+spec:
+  selector:
+    app: tradingagents
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8501
+    protocol: TCP
+  - name: api
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tradingagents-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tradingagents-secrets
+type: Opaque
+stringData:
+  # API Keys (需要根据实际情况填写)
+  OPENAI_API_KEY: "your-openai-api-key"
+  SILICONFLOW_API_KEY: "your-siliconflow-api-key"
+  DEEPSEEK_API_KEY: "your-deepseek-api-key"
+  DASHSCOPE_API_KEY: "your-dashscope-api-key"
+  
+  # Database Configuration
+  TRADINGAGENTS_MONGODB_URL: "mongodb://admin:password@mongodb:27017/tradingagents?authSource=admin"
+  TRADINGAGENTS_REDIS_URL: "redis://:password@redis:6379"
+  
+  # Other Configuration
+  TRADINGAGENTS_CACHE_TYPE: "redis"
+  DEFAULT_MODEL: "deepseek-ai/DeepSeek-V3"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tradingagents-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - tradingagents.yourdomain.com
+    secretName: tradingagents-tls
+  rules:
+  - host: tradingagents.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tradingagents-service
+            port:
+              number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: tradingagents-service
+            port:
+              number: 8000
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: tradingagents-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: tradingagents
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tradingagents-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tradingagents-app
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
