@@ -2,15 +2,18 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/Version-cn--0.1.7-green.svg)](./VERSION)
+[![Version](https://img.shields.io/badge/Version-cn--1.0.0-green.svg)](./VERSION)
 [![Documentation](https://img.shields.io/badge/docs-中文文档-green.svg)](./docs/)
+[![SiliconFlow](https://img.shields.io/badge/🚀_硅基流动-优先支持-blue.svg)](https://siliconflow.cn/)
 [![Original](https://img.shields.io/badge/基于-TauricResearch/TradingAgents-orange.svg)](https://github.com/TauricResearch/TradingAgents)
 
-> 🎉 **版本**: 当前版本为 cn-0.1.7 版，已具备Docker容器化部署、专业报告导出、DeepSeek V3集成、完整的A股数据支持等核心功能。
+> 🎉 **版本**: 当前版本为 cn-1.0.0 版，已完成全面系统优化，具备生产级部署能力！
+>
+> 🚀 **重大更新**: 优先支持硅基流动API，提供最高性价比的多模型统一接口
 >
 > 📝 **版本说明**: 为避免与源项目版本冲突，中文增强版使用 `cn-` 前缀的独立版本体系。
 
-基于多智能体大语言模型的中文金融交易决策框架。本项目基于 [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents) 开发，专为中文用户提供Docker容器化部署、专业报告导出、DeepSeek V3成本优化、完整的A股支持和本地化体验。
+基于多智能体大语言模型的**企业级**中文金融交易决策框架。本项目基于 [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents) 开发，专为中文用户提供**硅基流动API优先支持**、生产级系统优化、完整的A股支持和本地化体验。
 
 ## 🙏 致敬与感谢
 
